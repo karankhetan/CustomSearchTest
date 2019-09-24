@@ -65,10 +65,7 @@ export default class SearchFilterWebPart extends BaseClientSideWebPart<ISearchFi
     
    let element2;
     this.loadwebpart().then((res)=>{
-      element2= React.createElement(res);
-      console.log(element);
-      console.log(element2);
-      //ReactDom.render(res, this.domElement);
+      console.log(res);
     });
    
 
