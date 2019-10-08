@@ -67,11 +67,22 @@ export default class SearchFilter extends React.Component<ISearchFilterProps,
   }
 public _onSearchCalled(value){
 console.log(value);
-  sp.search({
-    Querytext: "test",
-    RowLimit: 10,
-    sourceId: "e7ec8cee-ded8-43c9-beb5-436b54b31e84"
-}).then((r:SearchResults)=>{
+
+var searchFilters = {
+  Querytext: value,
+  RowLimit: 4,
+  SelectProperties: ['Title', 'SPWebUrl'],
+  TrimDuplicates: false,
+  Properties: [{
+    Name: "EnableDynamicGroups",
+    Value: {
+      BoolVal: true,
+      QueryPropertyValueTypeIndex: 3
+    }
+  }]
+};
+
+  sp.search(searchFilters).then((r:SearchResults)=>{
     console.log(r);
   });
 
@@ -99,8 +110,6 @@ public _onSearchSuggest(value){
           onChange={this._onSearchSuggest.bind(this)}
           />
         </div>
-
-
 
         <List
           items={["test1", "test2", "test3", "test4", "test5", "test6"]}
