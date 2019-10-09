@@ -1,5 +1,28 @@
 @import '~office-ui-fabric-react/dist/sass/References.scss';
 
+.GridRow{
+  @include ms-Grid-row;
+  padding-top: 10px
+}
+.GridColumnleft{
+  @include ms-Grid-col;
+  @include ms-lg2;
+}
+
+.GridColumnCenter{
+  @include ms-Grid-col;
+  @include ms-lg6;
+}
+.GridColumnRight{
+  @include ms-Grid-col;
+  @include ms-lg4;
+}
+
+
+.Listitem:hover{
+  background-color:azure;
+}
+
 .searchFilter {
   .container {
     max-width: 700px;

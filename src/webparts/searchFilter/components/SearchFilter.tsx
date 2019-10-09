@@ -8,7 +8,7 @@ import { Callout, DirectionalHint } from 'office-ui-fabric-react/lib/Callout';
 import { SearchBox } from 'office-ui-fabric-react/lib/SearchBox';
 import "office-ui-fabric-react/lib/components/SearchBox/examples/SearchBox.Examples.scss";
 import "office-ui-fabric-react/lib/components/Callout/examples/CalloutExample.scss";
-import { sp, SearchSuggestQuery, SearchSuggestResult, SearchResults,SearchQuery } from "@pnp/sp";
+import { sp, SearchSuggestQuery, SearchSuggestResult, SearchResults, SearchQuery } from "@pnp/sp";
 
 const EXP_SOURCE: string = "SPFxDirectory";
 
@@ -19,7 +19,9 @@ export interface IPersonaCardState {
   isCalloutVisible?: boolean;
   pictureUrl: string;
   flag: boolean;
-  searchResults:any[];
+  searchResults: any[];
+  ServerRedirectedEmbedURL: string;
+
 
 }
 export default class SearchFilter extends React.Component<ISearchFilterProps,
@@ -33,10 +35,13 @@ export default class SearchFilter extends React.Component<ISearchFilterProps,
     this.state = {
       livePersonaCard: undefined, pictureUrl: undefined, flag: false,
       isCalloutVisible: false,
-      searchResults:[]
-
+      searchResults: [], ServerRedirectedEmbedURL: ""
     };
   }
+
+componentDidMount(){
+  document.getElementById("workbenchPageContent").setAttribute("style", "max-width: 100%;");
+}
 
   private _onCalloutDismiss = (): void => {
     this.setState({
@@ -51,8 +56,10 @@ export default class SearchFilter extends React.Component<ISearchFilterProps,
     });
   };
 
-  public _onMouseEnter(index) {
+  public _onMouseEnter(index, item) {
     this._menuButtonElement = this.listReference[index];
+    this.setState({ ServerRedirectedEmbedURL: item.ServerRedirectedEmbedURL })
+   // console.log(item)
     this._onShowMenuClicked();
   }
 
@@ -60,69 +67,77 @@ export default class SearchFilter extends React.Component<ISearchFilterProps,
     // if(this.listReference.length<=index){
     // this.listReference.push(null);}
     return (
-      <div className="ms-CalloutExample-buttonArea" ref={ref => (this.listReference[index] = ref)} style={{ height: "30px" }}>
-        <div style={{ height: "30px" }} onMouseEnter={this._onMouseEnter.bind(this, index)}>{item}</div>
+      <div className={`ms-ms-CalloutExample-buttonArea ${styles.Listitem}`} ref={ref => (this.listReference[index] = ref)} style={{ height: "30px" }}>
+        <div style={{ height: "30px" }}  onClick={this._onMouseEnter.bind(this, index, item)}>{item.Title}</div>
       </div>
     );
   }
-public _onSearchCalled(value){
-console.log(value);
+  public _onSearchCalled(value) {
+    //console.log(value);
 
-var searchFilters = {
-  Querytext: value,
-  RowLimit: 4,
-  SelectProperties: ['Title', 'SPWebUrl'],
-  TrimDuplicates: false,
-  Properties: [{
-    Name: "EnableDynamicGroups",
-    Value: {
-      BoolVal: true,
-      QueryPropertyValueTypeIndex: 3
-    }
-  }]
-};
+    var searchFilters = {
+      Querytext: value,
+      RowLimit: 4,
+      SelectProperties: ['Title', 'ServerRedirectedEmbedURL', 'Path'],
+      TrimDuplicates: false,
+      Properties: [{
+        Name: "EnableDynamicGroups",
+        Value: {
+          BoolVal: true,
+          QueryPropertyValueTypeIndex: 3
+        }
+      }]
+    };
 
-  sp.search(searchFilters).then((r:SearchResults)=>{
-    console.log(r);
-  });
-
-
-}
-
-public _onSearchSuggest(value){
-  // console.log(value)
-  // sp.searchSuggest(value).then((r:SearchSuggestResult)=>{
-  //   console.log(r);
-  // });
-}
+    sp.search(searchFilters).then((r: SearchResults) => {
+      let arrayOfResults = [];
+      //    console.log(r.PrimarySearchResults);
+      r.PrimarySearchResults.map((res) => {
+        let newObj = { Title: res.Title, ServerRedirectedEmbedURL: res.ServerRedirectedEmbedURL, Path: res.Path };
+        arrayOfResults.push(newObj);
+      });
+      this.setState({ searchResults: arrayOfResults });
+    });
+  }
 
 
   public render(): React.ReactElement<ISearchFilterProps> {
     var flag = true;
-    const abc = (<iframe width="500" height="350" src="https://khetan1.sharepoint.com/sites/TestDemo/_layouts/15/Doc.aspx?sourcedoc={3bad1fbe-d48a-4353-8dff-fcaf57f48ed4}&action=interactivepreview"></iframe>);
+    const abc = (<iframe width="100%" height="350" src={this.state.ServerRedirectedEmbedURL}></iframe>);
     return (
       <div>
-        
+
         <div>
-          <SearchBox 
-          placeholder="search"
-          onSearch={this._onSearchCalled.bind(this)}
-          onChange={this._onSearchSuggest.bind(this)}
+          <SearchBox
+            placeholder="search"
+            onSearch={this._onSearchCalled.bind(this)}
           />
         </div>
+        <div className={styles.GridRow}>
+          <div id="refiners" className={styles.GridColumnleft}></div>
+          <div id="searchResults" className={styles.GridColumnCenter}>
+            <List
+              items={this.state.searchResults}//{["test1", "test2", "test3", "test4", "test5", "test6"]}
+              onRenderCell={this._onRenderCell.bind(this)}
+            />
+          </div>
+          <div id="searchResultPreview" className={styles.GridColumnRight}>
+            {this.state.isCalloutVisible ? (
+              <div>
+                {abc}
+              </div>
+            ) : null}
+          </div>
 
-        <List
-          items={["test1", "test2", "test3", "test4", "test5", "test6"]}
-          onRenderCell={this._onRenderCell.bind(this)}
-        />
-        <div className="ms-CalloutExample-buttonArea" ref={menuButton => (this._menuButtonElement = menuButton)}>
+        </div>
+        {/* <div className="ms-CalloutExample-buttonArea" ref={menuButton => (this._menuButtonElement = menuButton)}>
           <DefaultButton
             className={'calloutExampleButton'}
             onClick={this._onShowMenuClicked}
             text={this.state.isCalloutVisible ? 'Hide callout' : 'Show callout'}
           />
-        </div>
-        {this.state.isCalloutVisible ? (
+        </div> */}
+        {/* {this.state.isCalloutVisible ? (
           <Callout
             //className="ms-CalloutExample-callout"
             gapSpace={5}
@@ -136,7 +151,7 @@ public _onSearchSuggest(value){
               {abc}
             </div>
           </Callout>
-        ) : null}
+        ) : null} */}
 
       </div>
     );
